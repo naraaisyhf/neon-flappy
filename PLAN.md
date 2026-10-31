@@ -19,6 +19,8 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - **Penyimpanan**: LocalStorage (`arcade_leaderboard`, `arcade_last_username`)
 - **Kebijakan Caching**: Zero-Cache (`no-cache, no-store, must-revalidate`)
 - **Deployment**: GitHub Pages (Branch `main`, path `/`)
+- **Live Demo**: <https://naraaisyhf.github.io/neon-flappy/>
+- **Repository**: <https://github.com/naraaisyhf/neon-flappy>
 
 ### 1a. Spesifikasi Desain Terkunci (NEON FLAPPY)
 
@@ -66,12 +68,12 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - [x] Tambahan: toggle SFX (tersimpan), pause manual/otomatis, flash layar saat tabrakan.
 
 ### Phase 5: Publikasi GitHub Pages
-- [ ] Inisialisasi git dan branch `main`.
-- [ ] Buat repository GitHub publik via GitHub CLI (`gh repo create <repo> --public --source=. --remote=origin --push`). *Wajib berstatus Public agar GitHub Pages gratis dapat aktif.*
-- [ ] Aktifkan GitHub Pages (Metode CLI `gh api` atau manual via Web UI Settings > Pages branch `main` root `/`).
-- [ ] Kompatibilitas Google AI Studio: Sediakan snippet perintah terminal siap salin jika proyek dilanjutkan lewat antarmuka web.
-- [ ] Pantau status workflow build di tab Actions (`gh run list`).
-- [ ] Tes live demo (`https://<username>.github.io/<repo>/`) dan pastikan pembaruan langsung tampil tanpa hambatan cache (Zero-Cache test).
+- [x] Inisialisasi git dan branch `main`.
+- [x] Buat repository GitHub publik via GitHub CLI (`gh repo create <repo> --public --source=. --remote=origin --push`). *Wajib berstatus Public agar GitHub Pages gratis dapat aktif.*
+- [x] Aktifkan GitHub Pages (Metode CLI `gh api` atau manual via Web UI Settings > Pages branch `main` root `/`).
+- [x] Kompatibilitas Google AI Studio: Sediakan snippet perintah terminal siap salin jika proyek dilanjutkan lewat antarmuka web.
+- [x] Pantau status workflow build di tab Actions (`gh run list`).
+- [x] Tes live demo (`https://naraaisyhf.github.io/neon-flappy/`) dan pastikan pembaruan langsung tampil tanpa hambatan cache (Zero-Cache test).
 
 ---
 
@@ -85,7 +87,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 | **T-03** | Modul Input Username & Leaderboard Top 10 | Phase 2 | `DONE` | AI | Modal nama + tabel Top 10 tersimpan |
 | **T-04** | Logika Pergerakan, Rintangan & Tabrakan | Phase 3 | `DONE` | AI | Gravitasi, pipa, circle-rect, skor +1 |
 | **T-05** | Efek Suara Synth Web Audio API & Partikel | Phase 4 | `DONE` | AI | 4 SFX, partikel, screen shake, flash |
-| **T-06** | Deployment GitHub Pages via GitHub CLI (`gh`) | Phase 5 | `TODO` | AI | Publikasi live & verifikasi zero-cache |
+| **T-06** | Deployment GitHub Pages via GitHub CLI (`gh`) | Phase 5 | `DONE` | AI | Live di <https://naraaisyhf.github.io/neon-flappy/> (HTTP 200) |
 
 *Status: `TODO` | `IN-PROGRESS` | `DONE`*
 
@@ -95,6 +97,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
+| **v1.0.1** | 2026-10-31 | AI | Deploy publik ke GitHub Pages: <https://naraaisyhf.github.io/neon-flappy/> | `cafb670` |
 | **v1.0.0** | 2026-10-31 | AI | Rilis `index.html` NEON FLAPPY: 8 blok modular, leaderboard, fisika, audio, partikel, pause | — |
 | **v0.3.0** | 2026-10-31 | AI | Phase 0 selesai: konsep NEON FLAPPY (tap/klik, Neon Glow) beserta spesifikasi fisika, skor, dan kesulitan | — |
 | **v0.2.2** | 2026-10-24 | AI | Menambahkan panduan alur integrasi khusus Google AI Studio & penegasan repo wajib Public | `07475fb` |
