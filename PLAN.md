@@ -33,6 +33,15 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - **Juice**: partikel burst saat flap dan saat skor, screen shake singkat saat tabrakan.
 - **Kondisi Game Over**: tabrakan AABB dengan pipa, menyentuh lantai, atau keluar batas atas.
 
+### 1b. Pengembangan v1.1 — Mode, Koin, dan Karakter
+
+- **Mode**: `ENDLESS` (default), `TIME ATTACK 60s` (timer habis = Game Over), `HARDCORE` (celah 82%, kecepatan +25%, tanpa power-up).
+- **Koin**: muncul di celah pipa dengan posisi vertikal acak, bernilai **+5 skor**.
+- **Power-up**: `SHIELD` (menahan 1 tabrakan + 2 detik invulnerabilitas) dan `SLOW` (memperlambat dunia 55% selama 4 detik).
+- **Karakter**: 4 skin kosmetik (NEON, AQUA, MAGMA, GHOST); tidak mengubah statistik agar papan skor tetap adil.
+- **Leaderboard per mode**: `arcade_leaderboard` (endless), `arcade_leaderboard_time`, `arcade_leaderboard_hardcore`.
+- **Preferensi**: mode terakhir di `arcade_mode`, karakter di `arcade_skin`.
+
 ---
 
 ## 2. Fase Pengembangan Universal
@@ -75,6 +84,12 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 - [x] Pantau status workflow build di tab Actions (`gh run list`).
 - [x] Tes live demo (`https://naraaisyhf.github.io/neon-flappy/`) dan pastikan pembaruan langsung tampil tanpa hambatan cache (Zero-Cache test).
 
+### Phase 6: Pengembangan Lanjutan (v1.1)
+- [x] Mode Endless, Time Attack 60s, dan Hardcore dengan papan skor terpisah.
+- [x] Koin +5 dengan posisi vertikal acak di dalam celah.
+- [x] Power-up shield dan slow-motion beserta indikator HUD.
+- [x] Pemilihan karakter (4 skin kosmetik) yang tersimpan di LocalStorage.
+
 ---
 
 ## 3. Matriks Tugas & Status Pelaksanaan
@@ -88,6 +103,9 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 | **T-04** | Logika Pergerakan, Rintangan & Tabrakan | Phase 3 | `DONE` | AI | Gravitasi, pipa, circle-rect, skor +1 |
 | **T-05** | Efek Suara Synth Web Audio API & Partikel | Phase 4 | `DONE` | AI | 4 SFX, partikel, screen shake, flash |
 | **T-06** | Deployment GitHub Pages via GitHub CLI (`gh`) | Phase 5 | `DONE` | AI | Live di <https://naraaisyhf.github.io/neon-flappy/> (HTTP 200) |
+| **T-07** | Koin & Power-up (shield, slow-motion) | Phase 6 | `DONE` | AI | +5 per koin, item di celah pipa |
+| **T-08** | Mode Endless / Time Attack / Hardcore | Phase 6 | `DONE` | AI | Leaderboard terpisah per mode |
+| **T-09** | Pemilihan karakter (4 skin) | Phase 6 | `DONE` | AI | Tersimpan di `arcade_skin` |
 
 *Status: `TODO` | `IN-PROGRESS` | `DONE`*
 
@@ -97,6 +115,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
+| **v1.1.0** | 2026-11-07 | AI | Mode Time Attack & Hardcore, koin +5, power-up shield/slow-mo, 4 karakter, leaderboard per mode | — |
 | **v1.0.1** | 2026-10-31 | AI | Deploy publik ke GitHub Pages: <https://naraaisyhf.github.io/neon-flappy/> | `cafb670` |
 | **v1.0.0** | 2026-10-31 | AI | Rilis `index.html` NEON FLAPPY: 8 blok modular, leaderboard, fisika, audio, partikel, pause | — |
 | **v0.3.0** | 2026-10-31 | AI | Phase 0 selesai: konsep NEON FLAPPY (tap/klik, Neon Glow) beserta spesifikasi fisika, skor, dan kesulitan | — |

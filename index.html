@@ -60,10 +60,10 @@
     background: rgba(3, 5, 15, .74);
     backdrop-filter: blur(7px);
     -webkit-backdrop-filter: blur(7px);
+    overflow-y: auto;
     animation: fadeIn .18s ease both;
   }
-  .overlay.show { display: flex; }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .overlay.show { display: flex; }  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   .panel { width: 100%; max-width: 340px; }
 
   .title {
@@ -105,6 +105,38 @@
   .btn.primary:hover { background: linear-gradient(180deg, #a5fbff, #4ae4ff); }
   .row { display: flex; gap: 10px; }
   .row .btn { flex: 1; }
+
+  .section-label { margin: 15px 0 7px; font-size: 10px; letter-spacing: .22em; color: #6f8aa3; }
+  .seg { display: flex; gap: 6px; }
+  .seg-btn {
+    flex: 1; padding: 9px 3px;
+    font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: .05em;
+    color: #8fb6cc; background: rgba(8, 20, 38, .6);
+    border: 1px solid rgba(55, 240, 255, .25); border-radius: 9px;
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, background .15s ease, box-shadow .15s ease;
+  }
+  .seg-btn:hover { color: #dffaff; border-color: rgba(55, 240, 255, .6); }
+  .seg-btn.active {
+    color: #04121a;
+    background: linear-gradient(180deg, #7ff9ff, #37d6f0);
+    border-color: #bffaff;
+    box-shadow: 0 0 14px rgba(55, 240, 255, .45);
+  }
+  .skins { display: flex; gap: 10px; justify-content: center; }
+  #boardTabs { margin-bottom: 12px; }
+  .skin-btn {
+    width: 38px; height: 38px; padding: 0; border-radius: 50%; cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, .18);
+    box-shadow: 0 0 10px rgba(0, 0, 0, .45);
+    transition: transform .12s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .skin-btn:hover { transform: scale(1.08); }
+  .skin-btn.active {
+    border-color: #ffffff;
+    box-shadow: 0 0 16px rgba(255, 255, 255, .75);
+    transform: scale(1.12);
+  }
+  .modeline { margin: 2px 0 10px; font-size: 10px; letter-spacing: .22em; color: #7ff9ff; }
 
   h2 {
     margin: 0 0 16px; font-size: 20px; letter-spacing: .2em; color: #eafaff;
@@ -172,6 +204,13 @@
       <p class="tagline">TAP / KLIK UNTUK TERBANG</p>
       <p class="player">PEMAIN: <b id="menuPlayer">-</b></p>
       <p class="best">BEST: <b id="menuBest">0</b></p>
+
+      <p class="section-label">MODE</p>
+      <div class="seg" id="modeSeg"></div>
+
+      <p class="section-label">KARAKTER</p>
+      <div class="skins" id="skinRow"></div>
+
       <button id="btnStart" class="btn primary" type="button">MULAI</button>
       <div class="row">
         <button id="btnBoard" class="btn" type="button">PAPAN SKOR</button>
@@ -183,6 +222,7 @@
   <div id="overlayBoard" class="overlay">
     <div class="panel">
       <h2>PAPAN SKOR</h2>
+      <div class="seg" id="boardTabs"></div>
       <table class="board">
         <thead>
           <tr><th>#</th><th>NAMA</th><th>SKOR</th><th>TANGGAL</th></tr>
@@ -207,6 +247,7 @@
   <div id="overlayOver" class="overlay">
     <div class="panel">
       <h2 class="over">GAME OVER</h2>
+      <p class="modeline" id="overMode">ENDLESS</p>
       <p class="scoreline">SKOR <b id="overScore">0</b></p>
       <p class="bestline">BEST: <b id="overBest">0</b></p>
       <p id="overRank" class="rank"></p>
@@ -256,6 +297,28 @@ const MIN_SPAWN = 1.15;
 const PIPE_MARGIN = 80;
 
 const SHAKE_DUR = 0.4;
+
+const MODES = {
+  endless:  { label: "ENDLESS",         short: "ENDLESS",  speedScale: 1,    gapScale: 1,    ramp: 20, timeLimit: 0,  powerups: true  },
+  time:     { label: "TIME ATTACK 60s", short: "TIME 60s", speedScale: 1.1,  gapScale: 1,    ramp: 24, timeLimit: 60, powerups: true  },
+  hardcore: { label: "HARDCORE",        short: "HARDCORE", speedScale: 1.25, gapScale: 0.82, ramp: 28, timeLimit: 0,  powerups: false }
+};
+
+const SKINS = [
+  { id: "neon",  name: "NEON",  body: ["#fffbd0", "#ffe45e", "#ff9f1c"], glow: "#ffe45e", wing: "rgba(55, 240, 255, 0.9)",  eye: "#0a1024", beak: "#ff7a18" },
+  { id: "aqua",  name: "AQUA",  body: ["#eaffff", "#7ff9ff", "#2bb8f0"], glow: "#7ff9ff", wing: "rgba(255, 111, 240, 0.9)", eye: "#052033", beak: "#ffd166" },
+  { id: "magma", name: "MAGMA", body: ["#ffe0c0", "#ff8a3d", "#c2240f"], glow: "#ff6a00", wing: "rgba(255, 209, 102, 0.9)", eye: "#2a0a05", beak: "#fff2a8" },
+  { id: "ghost", name: "GHOST", body: ["#ffffff", "#d9c8ff", "#7a5cff"], glow: "#b58cff", wing: "rgba(127, 249, 255, 0.9)", eye: "#120a2a", beak: "#ff8cf5" }
+];
+
+const COIN_SCORE = 5;
+const COIN_R = 11;
+const POWER_R = 13;
+const COIN_CHANCE = 0.62;
+const POWER_CHANCE = 0.22;
+const SHIELD_INVULN = 2;
+const SLOWMO_TIME = 4;
+const SLOWMO_FACTOR = 0.55;
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -327,6 +390,28 @@ function playGameOver() {
   tone({ freq: 165, dur: 0.34, type: "triangle", vol: 0.15, delay: 0.84 });
 }
 
+function playCoin() {
+  tone({ freq: 1046, dur: 0.07, type: "sine", vol: 0.15 });
+  tone({ freq: 1568, dur: 0.12, type: "sine", vol: 0.13, delay: 0.06 });
+}
+
+function playPower() {
+  tone({ freq: 523, dur: 0.09, type: "triangle", vol: 0.15 });
+  tone({ freq: 784, dur: 0.09, type: "triangle", vol: 0.15, delay: 0.08 });
+  tone({ freq: 1046, dur: 0.16, type: "triangle", vol: 0.16, delay: 0.16 });
+}
+
+function playShieldBreak() {
+  tone({ freq: 320, to: 70, dur: 0.22, type: "sawtooth", vol: 0.2 });
+  tone({ freq: 900, to: 300, dur: 0.16, type: "square", vol: 0.12, delay: 0.03 });
+}
+
+function playTimeUp() {
+  tone({ freq: 660, dur: 0.16, type: "square", vol: 0.16 });
+  tone({ freq: 440, dur: 0.16, type: "square", vol: 0.16, delay: 0.16 });
+  tone({ freq: 220, dur: 0.4, type: "square", vol: 0.16, delay: 0.32 });
+}
+
 function setMuted(value) {
   muted = value;
   try { localStorage.setItem("arcade_muted", muted ? "1" : "0"); } catch (e) { /* storage diblokir */ }
@@ -354,8 +439,22 @@ const state = {
   scroll: 0,
   spawnTimer: 0,
   shake: 0,
-  flash: 0
+  flash: 0,
+  clock: 0,
+  mode: "endless",
+  skin: "neon",
+  boardMode: "endless",
+  timeLeft: 0,
+  shield: false,
+  invuln: 0,
+  slowmo: 0,
+  powerFlash: 0,
+  overReason: "crash"
 };
+
+let modeButtons = [];
+let skinButtons = [];
+let boardTabButtons = [];
 
 function isTyping() {
   const el = document.activeElement;
@@ -390,16 +489,30 @@ document.addEventListener("visibilitychange", function () {
 });
 
 /* 4. GAME STATE & ENTITIES */
+function currentMode() {
+  return MODES[state.mode] || MODES.endless;
+}
+
+function currentSkin() {
+  for (let i = 0; i < SKINS.length; i++) {
+    if (SKINS[i].id === state.skin) return SKINS[i];
+  }
+  return SKINS[0];
+}
+
 function difficulty() {
+  const mode = currentMode();
   const level = Math.floor(state.score / 10);
+  const gapBase = Math.max(MIN_GAP, BASE_GAP - level * 12);
   return {
-    speed: Math.min(MAX_SPEED, BASE_SPEED + level * 20),
-    gap: Math.max(MIN_GAP, BASE_GAP - level * 12),
+    speed: Math.min(MAX_SPEED * mode.speedScale, (BASE_SPEED + level * mode.ramp) * mode.speedScale),
+    gap: gapBase * mode.gapScale,
     spawn: Math.max(MIN_SPAWN, BASE_SPAWN - level * 0.08)
   };
 }
 
 function resetGame() {
+  const mode = currentMode();
   state.score = 0;
   state.lastRank = null;
   state.bird.y = H * 0.45;
@@ -411,6 +524,12 @@ function resetGame() {
   state.spawnTimer = 0.4;
   state.shake = 0;
   state.flash = 0;
+  state.timeLeft = mode.timeLimit;
+  state.shield = false;
+  state.invuln = 0;
+  state.slowmo = 0;
+  state.powerFlash = 0;
+  state.overReason = "crash";
 }
 
 function syncUI() {
@@ -424,7 +543,20 @@ function syncUI() {
   const playing = state.phase === "PLAYING" || state.phase === "PAUSED";
   document.getElementById("btnPause").hidden = !playing;
   document.getElementById("menuPlayer").textContent = state.username || "-";
+
+  const board = getLeaderboard(state.mode);
+  state.best = board.length ? board[0].score : 0;
   document.getElementById("menuBest").textContent = String(state.best);
+
+  for (let i = 0; i < modeButtons.length; i++) {
+    modeButtons[i].classList.toggle("active", modeButtons[i].dataset.mode === state.mode);
+  }
+  for (let i = 0; i < skinButtons.length; i++) {
+    skinButtons[i].classList.toggle("active", skinButtons[i].dataset.skin === state.skin);
+  }
+  for (let i = 0; i < boardTabButtons.length; i++) {
+    boardTabButtons[i].classList.toggle("active", boardTabButtons[i].dataset.boardMode === state.boardMode);
+  }
 }
 
 function showPanel(id, visible) {
@@ -433,11 +565,13 @@ function showPanel(id, visible) {
   else el.classList.remove("show");
 }
 
-function startGame() {
+function startGame(mode) {
   if (!state.username) {
     openNameModal();
     return;
   }
+  if (mode && MODES[mode]) state.mode = mode;
+  savePreferences();
   resetGame();
   state.phase = "PLAYING";
   state.panel = null;
@@ -449,7 +583,8 @@ function goMenu() {
   state.phase = "MENU";
   state.panel = "menu";
   resetGame();
-  state.best = getLeaderboard().length ? getLeaderboard()[0].score : 0;
+  const board = getLeaderboard(state.mode);
+  state.best = board.length ? board[0].score : 0;
   syncUI();
 }
 
@@ -479,18 +614,32 @@ function flap() {
   playFlap();
 }
 
-function die() {
+function breakShield() {
+  state.shield = false;
+  state.invuln = SHIELD_INVULN;
+  state.shake = 0.22;
+  state.flash = 0.6;
+  spawnParticles(BIRD_X, state.bird.y, 18, "#7ff9ff", 240);
+  playShieldBreak();
+}
+
+function die(reason) {
   if (state.phase !== "PLAYING") return;
+  state.overReason = reason || "crash";
   state.phase = "GAMEOVER";
   state.panel = null;
   state.shake = SHAKE_DUR;
   state.flash = 1;
   spawnParticles(BIRD_X, state.bird.y, 28, "#ff4fd8", 320);
-  playHit();
-  playGameOver();
+  if (state.overReason === "time") {
+    playTimeUp();
+  } else {
+    playHit();
+    playGameOver();
+  }
 
-  state.lastRank = state.score > 0 ? saveScore(state.score) : null;
-  const board = getLeaderboard();
+  state.lastRank = state.score > 0 ? saveScore(state.score, state.mode) : null;
+  const board = getLeaderboard(state.mode);
   state.best = board.length ? board[0].score : 0;
   syncUI();
 
@@ -505,21 +654,45 @@ function die() {
 function renderGameOverPanel() {
   document.getElementById("overScore").textContent = String(state.score);
   document.getElementById("overBest").textContent = String(state.best);
+  document.getElementById("overMode").textContent = currentMode().label;
+
   let message = "";
-  if (state.lastRank === 1) message = "SKOR TERBAIK BARU! PERINGKAT #1";
-  else if (state.lastRank) message = "MASUK PAPAN SKOR - PERINGKAT #" + state.lastRank;
-  else if (state.score === 0) message = "SKOR 0 BELUM MASUK PAPAN SKOR.";
-  else message = "BELUM MASUK TOP 10. COBA LAGI!";
+  if (state.overReason === "time") message = "WAKTU HABIS! ";
+  if (state.lastRank === 1) message += "SKOR TERBAIK BARU! PERINGKAT #1";
+  else if (state.lastRank) message += "MASUK PAPAN SKOR - PERINGKAT #" + state.lastRank;
+  else if (state.score === 0) message += "SKOR 0 BELUM MASUK PAPAN SKOR.";
+  else message += "BELUM MASUK TOP 10. COBA LAGI!";
   document.getElementById("overRank").textContent = message;
 }
 
 /* 5. COLLISION & PHYSICS */
 function spawnPipe() {
   const diff = difficulty();
+  const mode = currentMode();
   const minY = PIPE_MARGIN + diff.gap / 2;
   const maxY = GROUND_Y - PIPE_MARGIN - diff.gap / 2;
   const gapY = maxY > minY ? minY + Math.random() * (maxY - minY) : GROUND_Y / 2;
-  state.pipes.push({ x: W + 20, gapY: gapY, gap: diff.gap, scored: false });
+  const pipe = {
+    x: W + 20,
+    gapY: gapY,
+    gap: diff.gap,
+    scored: false,
+    coin: false,
+    coinTaken: false,
+    power: null,
+    powerTaken: false
+  };
+
+  if (mode.powerups && Math.random() < POWER_CHANCE) {
+    pipe.power = Math.random() < 0.5 ? "shield" : "slow";
+  } else if (Math.random() < COIN_CHANCE) {
+    pipe.coin = true;
+  }
+
+  const maxOffset = Math.max(0, diff.gap / 2 - 30);
+  pipe.itemY = gapY + (Math.random() * 2 - 1) * maxOffset;
+
+  state.pipes.push(pipe);
 }
 
 function updateBird(dt) {
@@ -530,23 +703,61 @@ function updateBird(dt) {
   bird.wing = Math.max(0, bird.wing - dt * 4);
 }
 
-function updatePipes(dt) {
+function distSq(ax, ay, bx, by) {
+  const dx = ax - bx;
+  const dy = ay - by;
+  return dx * dx + dy * dy;
+}
+
+function updatePipes(dt, worldScale) {
   const diff = difficulty();
-  state.spawnTimer -= dt;
+  state.spawnTimer -= dt * worldScale;
   if (state.spawnTimer <= 0) {
     spawnPipe();
     state.spawnTimer = diff.spawn;
   }
 
+  const bird = state.bird;
+
   for (let i = state.pipes.length - 1; i >= 0; i--) {
     const pipe = state.pipes[i];
-    pipe.x -= diff.speed * dt;
+    pipe.x -= diff.speed * worldScale * dt;
 
     if (!pipe.scored && pipe.x + PIPE_W < BIRD_X - BIRD_R) {
       pipe.scored = true;
       state.score += 1;
-      spawnParticles(BIRD_X, state.bird.y, 8, "#ffe45e", 140);
+      spawnParticles(BIRD_X, bird.y, 8, "#ffe45e", 140);
       playScore();
+    }
+
+    const cx = pipe.x + PIPE_W / 2;
+    const cy = typeof pipe.itemY === "number" ? pipe.itemY : pipe.gapY;
+
+    if (pipe.coin && !pipe.coinTaken) {
+      const reach = BIRD_R + COIN_R;
+      if (distSq(BIRD_X, bird.y, cx, cy) < reach * reach) {
+        pipe.coinTaken = true;
+        state.score += COIN_SCORE;
+        state.powerFlash = Math.max(state.powerFlash, 0.35);
+        spawnParticles(cx, cy, 10, "#ffe45e", 170);
+        playCoin();
+      }
+    }
+
+    if (pipe.power && !pipe.powerTaken) {
+      const reach = BIRD_R + POWER_R;
+      if (distSq(BIRD_X, bird.y, cx, cy) < reach * reach) {
+        pipe.powerTaken = true;
+        if (pipe.power === "shield") {
+          state.shield = true;
+          spawnParticles(cx, cy, 14, "#7ff9ff", 210);
+        } else {
+          state.slowmo = SLOWMO_TIME;
+          spawnParticles(cx, cy, 14, "#c08bff", 210);
+        }
+        state.powerFlash = 1;
+        playPower();
+      }
     }
 
     if (pipe.x + PIPE_W < -20) state.pipes.splice(i, 1);
@@ -561,12 +772,16 @@ function circleRect(cx, cy, cr, rx, ry, rw, rh) {
   return dx * dx + dy * dy < cr * cr;
 }
 
-function collides() {
+function hazardHit() {
   const bird = state.bird;
-  const hitR = BIRD_R * 0.86;
-
   if (bird.y + BIRD_R >= GROUND_Y) return true;
   if (bird.y - BIRD_R <= 0) return true;
+  return false;
+}
+
+function pipeHit() {
+  const bird = state.bird;
+  const hitR = BIRD_R * 0.86;
 
   for (let i = 0; i < state.pipes.length; i++) {
     const pipe = state.pipes[i];
@@ -621,25 +836,83 @@ function updateStars(dt, speed) {
 
 function update(dt) {
   const playing = state.phase === "PLAYING";
-  const bgSpeed = playing ? difficulty().speed : BASE_SPEED * 0.35;
+  const worldScale = state.slowmo > 0 ? SLOWMO_FACTOR : 1;
+  const bgSpeed = playing ? difficulty().speed * worldScale : BASE_SPEED * 0.35;
 
+  state.clock += dt;
   state.scroll += bgSpeed * dt;
   updateStars(dt, bgSpeed);
   updateParticles(dt);
   if (state.shake > 0) state.shake = Math.max(0, state.shake - dt);
   if (state.flash > 0) state.flash = Math.max(0, state.flash - dt * 2.2);
+  if (state.powerFlash > 0) state.powerFlash = Math.max(0, state.powerFlash - dt * 2.4);
 
   if (!playing) return;
 
+  if (state.slowmo > 0) state.slowmo = Math.max(0, state.slowmo - dt);
+  if (state.invuln > 0) state.invuln = Math.max(0, state.invuln - dt);
+
+  if (currentMode().timeLimit > 0) {
+    const before = Math.ceil(state.timeLeft);
+    state.timeLeft -= dt;
+    if (state.timeLeft <= 0) {
+      state.timeLeft = 0;
+      die("time");
+      return;
+    }
+    const after = Math.ceil(state.timeLeft);
+    if (after !== before && after <= 3) {
+      tone({ freq: 880, dur: 0.08, type: "square", vol: 0.12 });
+    }
+  }
+
   updateBird(dt);
-  updatePipes(dt);
-  if (collides()) die();
+  updatePipes(dt, worldScale);
+
+  if (hazardHit()) {
+    die("crash");
+    return;
+  }
+
+  if (state.invuln <= 0 && pipeHit()) {
+    if (state.shield) breakShield();
+    else die("crash");
+  }
 }
 
 /* 6. LOCALSTORAGE LEADERBOARD */
 const LS_NAME = "arcade_last_username";
-const LS_BOARD = "arcade_leaderboard";
 const LS_MUTED = "arcade_muted";
+const LS_MODE = "arcade_mode";
+const LS_SKIN = "arcade_skin";
+
+const BOARD_KEYS = {
+  endless: "arcade_leaderboard",
+  time: "arcade_leaderboard_time",
+  hardcore: "arcade_leaderboard_hardcore"
+};
+
+function boardKey(mode) {
+  return BOARD_KEYS[mode] || BOARD_KEYS.endless;
+}
+
+function savePreferences() {
+  try {
+    localStorage.setItem(LS_MODE, state.mode);
+    localStorage.setItem(LS_SKIN, state.skin);
+  } catch (e) { /* storage diblokir */ }
+}
+
+function loadPreferences() {
+  try {
+    const mode = localStorage.getItem(LS_MODE);
+    if (mode && MODES[mode]) state.mode = mode;
+    const skin = localStorage.getItem(LS_SKIN);
+    for (let i = 0; i < SKINS.length; i++) {
+      if (SKINS[i].id === skin) state.skin = skin;
+    }
+  } catch (e) { /* storage diblokir */ }
+}
 
 function sanitizeName(raw) {
   return String(raw || "")
@@ -664,9 +937,9 @@ function saveLastUsername(name) {
   try { localStorage.setItem(LS_NAME, name); } catch (e) { /* storage diblokir */ }
 }
 
-function getLeaderboard() {
+function getLeaderboard(mode) {
   let raw = null;
-  try { raw = localStorage.getItem(LS_BOARD); } catch (e) { return []; }
+  try { raw = localStorage.getItem(boardKey(mode)); } catch (e) { return []; }
   if (!raw) return [];
   let parsed;
   try { parsed = JSON.parse(raw); } catch (e) { return []; }
@@ -679,23 +952,24 @@ function getLeaderboard() {
     .slice(0, 10);
 }
 
-function writeLeaderboard(list) {
-  try { localStorage.setItem(LS_BOARD, JSON.stringify(list)); } catch (e) { /* storage diblokir */ }
+function writeLeaderboard(list, mode) {
+  try { localStorage.setItem(boardKey(mode), JSON.stringify(list)); } catch (e) { /* storage diblokir */ }
 }
 
-function saveScore(score) {
-  const list = getLeaderboard();
+function saveScore(score, mode) {
+  const list = getLeaderboard(mode);
   const entry = {
     id: "run_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
     username: state.username || "PLAYER",
     score: score,
+    mode: mode || "endless",
     timestamp: Date.now(),
     date: formatDate(new Date())
   };
   list.push(entry);
   list.sort(function (a, b) { return b.score - a.score; });
   const top = list.slice(0, 10);
-  writeLeaderboard(top);
+  writeLeaderboard(top, mode);
 
   for (let i = 0; i < top.length; i++) {
     if (top[i].id === entry.id) return i + 1;
@@ -714,7 +988,7 @@ function formatDate(d) {
 
 function renderBoard() {
   const body = document.getElementById("boardBody");
-  const list = getLeaderboard();
+  const list = getLeaderboard(state.boardMode);
   body.textContent = "";
 
   if (!list.length) {
@@ -722,7 +996,7 @@ function renderBoard() {
     const td = document.createElement("td");
     td.className = "empty";
     td.colSpan = 4;
-    td.textContent = "Belum ada skor. Jadilah yang pertama!";
+    td.textContent = "Belum ada skor di mode ini. Jadilah yang pertama!";
     tr.appendChild(td);
     body.appendChild(tr);
     return;
@@ -825,6 +1099,78 @@ function drawPipes() {
   }
 }
 
+function drawCoin(x, y) {
+  const pulse = 1 + Math.sin(state.clock * 6 + x * 0.05) * 0.12;
+  ctx.save();
+  ctx.shadowColor = "#ffd23f";
+  ctx.shadowBlur = 20;
+  ctx.fillStyle = "#ffcf3a";
+  ctx.beginPath();
+  ctx.arc(x, y, COIN_R * pulse, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "#fff6c2";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y, COIN_R * 0.62 * pulse, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawPower(x, y, type) {
+  const color = type === "shield" ? "#7ff9ff" : "#c08bff";
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(Math.sin(state.clock * 2) * 0.25);
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 20;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(0, 0, POWER_R, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "rgba(8, 20, 40, 0.85)";
+  ctx.beginPath();
+  ctx.arc(0, 0, POWER_R - 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  if (type === "shield") {
+    ctx.beginPath();
+    ctx.moveTo(0, -6);
+    ctx.lineTo(6, -2);
+    ctx.lineTo(6, 4);
+    ctx.lineTo(0, 8);
+    ctx.lineTo(-6, 4);
+    ctx.lineTo(-6, -2);
+    ctx.closePath();
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(-5, -6);
+    ctx.lineTo(5, -6);
+    ctx.lineTo(-3, 6);
+    ctx.lineTo(3, 6);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-4, 0);
+    ctx.lineTo(4, 0);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawItems() {
+  for (let i = 0; i < state.pipes.length; i++) {
+    const pipe = state.pipes[i];
+    const x = pipe.x + PIPE_W / 2;
+    const y = typeof pipe.itemY === "number" ? pipe.itemY : pipe.gapY;
+    if (pipe.coin && !pipe.coinTaken) drawCoin(x, y);
+    if (pipe.power && !pipe.powerTaken) drawPower(x, y, pipe.power);
+  }
+}
+
 function drawGround() {
   const gradient = ctx.createLinearGradient(0, GROUND_Y, 0, H);
   gradient.addColorStop(0, "#120a25");
@@ -858,16 +1204,31 @@ function drawGround() {
 
 function drawBird() {
   const bird = state.bird;
+  const skin = currentSkin();
+
+  if (state.invuln > 0 && Math.floor(state.clock * 12) % 2 === 0) return;
+
   ctx.save();
   ctx.translate(BIRD_X, bird.y);
   ctx.rotate(bird.rot);
 
-  ctx.shadowColor = "#ffe45e";
+  if (state.shield) {
+    const ring = BIRD_R + 7 + Math.sin(state.clock * 8) * 1.5;
+    ctx.shadowColor = "#7ff9ff";
+    ctx.shadowBlur = 18;
+    ctx.strokeStyle = "rgba(127, 249, 255, 0.9)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, ring, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  ctx.shadowColor = skin.glow;
   ctx.shadowBlur = 22;
   const gradient = ctx.createRadialGradient(-4, -4, 2, 0, 0, BIRD_R + 4);
-  gradient.addColorStop(0, "#fffbd0");
-  gradient.addColorStop(0.5, "#ffe45e");
-  gradient.addColorStop(1, "#ff9f1c");
+  gradient.addColorStop(0, skin.body[0]);
+  gradient.addColorStop(0.5, skin.body[1]);
+  gradient.addColorStop(1, skin.body[2]);
   ctx.fillStyle = gradient;
   ctx.beginPath();
   ctx.arc(0, 0, BIRD_R, 0, Math.PI * 2);
@@ -875,13 +1236,13 @@ function drawBird() {
 
   ctx.shadowColor = "#37f0ff";
   ctx.shadowBlur = 12;
-  ctx.fillStyle = "rgba(55, 240, 255, 0.9)";
+  ctx.fillStyle = skin.wing;
   ctx.beginPath();
   ctx.ellipse(-2, 2 - bird.wing * 6, 8, 5, 0.3, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.shadowBlur = 0;
-  ctx.fillStyle = "#0a1024";
+  ctx.fillStyle = skin.eye;
   ctx.beginPath();
   ctx.arc(6, -4, 2.6, 0, Math.PI * 2);
   ctx.fill();
@@ -890,7 +1251,7 @@ function drawBird() {
   ctx.arc(6.9, -4.8, 1, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#ff7a18";
+  ctx.fillStyle = skin.beak;
   ctx.beginPath();
   ctx.moveTo(BIRD_R - 2, 2);
   ctx.lineTo(BIRD_R + 7, 5);
@@ -917,14 +1278,53 @@ function drawParticles() {
 }
 
 function drawHUD() {
+  const mode = currentMode();
+
   ctx.save();
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
+
+  ctx.font = "700 11px 'Courier New', monospace";
+  ctx.fillStyle = "rgba(127, 249, 255, 0.75)";
+  ctx.shadowColor = "#37f0ff";
+  ctx.shadowBlur = 10;
+  ctx.fillText(mode.label, W / 2, 40);
+
   ctx.font = "700 56px 'Courier New', monospace";
   ctx.fillStyle = "#eafaff";
   ctx.shadowColor = "#37f0ff";
   ctx.shadowBlur = 24;
-  ctx.fillText(String(state.score), W / 2, 96);
+  ctx.fillText(String(state.score), W / 2, 92);
+
+  if (mode.timeLimit > 0) {
+    const secs = Math.ceil(state.timeLeft);
+    const urgent = secs <= 10;
+    ctx.font = "700 20px 'Courier New', monospace";
+    ctx.fillStyle = urgent ? "#ff6b8a" : "#7ff9ff";
+    ctx.shadowColor = urgent ? "#ff2d5e" : "#37f0ff";
+    ctx.shadowBlur = 14;
+    ctx.fillText(secs + "s", W / 2, 136);
+  }
+
+  ctx.textAlign = "left";
+  ctx.font = "700 11px 'Courier New', monospace";
+  let badgeX = 20;
+  const badgeY = H - 26;
+
+  if (state.shield) {
+    ctx.fillStyle = "#7ff9ff";
+    ctx.shadowColor = "#7ff9ff";
+    ctx.shadowBlur = 12;
+    ctx.fillText("SHIELD", badgeX, badgeY);
+    badgeX += 62;
+  }
+  if (state.slowmo > 0) {
+    ctx.fillStyle = "#c08bff";
+    ctx.shadowColor = "#c08bff";
+    ctx.shadowBlur = 12;
+    ctx.fillText("SLOW " + Math.ceil(state.slowmo) + "s", badgeX, badgeY);
+  }
+
   ctx.restore();
 }
 
@@ -939,15 +1339,26 @@ function render() {
 
   drawBackground();
   drawPipes();
+  drawItems();
   drawGround();
   drawParticles();
   drawBird();
   ctx.restore();
 
+  if (state.slowmo > 0) {
+    ctx.fillStyle = "rgba(150, 90, 255, " + (0.08 + Math.sin(state.clock * 6) * 0.02).toFixed(3) + ")";
+    ctx.fillRect(0, 0, W, H);
+  }
+
   if (state.phase !== "MENU") drawHUD();
 
   if (state.flash > 0) {
     ctx.fillStyle = "rgba(255, 255, 255, " + (state.flash * 0.3).toFixed(3) + ")";
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  if (state.powerFlash > 0) {
+    ctx.fillStyle = "rgba(127, 249, 255, " + (state.powerFlash * 0.18).toFixed(3) + ")";
     ctx.fillRect(0, 0, W, H);
   }
 }
@@ -991,6 +1402,74 @@ function saveNameFromModal() {
   syncUI();
 }
 
+function makeModeHandler(mode) {
+  return function () {
+    state.mode = mode;
+    savePreferences();
+    const board = getLeaderboard(mode);
+    state.best = board.length ? board[0].score : 0;
+    syncUI();
+  };
+}
+
+function makeSkinHandler(id) {
+  return function () {
+    state.skin = id;
+    savePreferences();
+    syncUI();
+  };
+}
+
+function makeBoardHandler(mode) {
+  return function () {
+    state.boardMode = mode;
+    renderBoard();
+    syncUI();
+  };
+}
+
+function buildModeButtons(containerId, forBoard) {
+  const container = document.getElementById(containerId);
+  const buttons = [];
+  const keys = Object.keys(MODES);
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "seg-btn";
+    btn.textContent = MODES[key].short;
+    if (forBoard) btn.dataset.boardMode = key;
+    else btn.dataset.mode = key;
+    btn.addEventListener("click", forBoard ? makeBoardHandler(key) : makeModeHandler(key));
+    container.appendChild(btn);
+    buttons.push(btn);
+  }
+
+  return buttons;
+}
+
+function buildSkinButtons() {
+  const row = document.getElementById("skinRow");
+  const buttons = [];
+
+  for (let i = 0; i < SKINS.length; i++) {
+    const skin = SKINS[i];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "skin-btn";
+    btn.dataset.skin = skin.id;
+    btn.title = skin.name;
+    btn.setAttribute("aria-label", "Karakter " + skin.name);
+    btn.style.background = "radial-gradient(circle at 35% 30%, " + skin.body[0] + ", " + skin.body[1] + " 55%, " + skin.body[2] + ")";
+    btn.addEventListener("click", makeSkinHandler(skin.id));
+    row.appendChild(btn);
+    buttons.push(btn);
+  }
+
+  return buttons;
+}
+
 function boot() {
   fitCanvas();
   window.addEventListener("resize", fitCanvas);
@@ -1000,8 +1479,14 @@ function boot() {
   updateSoundLabel();
   if (muted && audioCtx && master) master.gain.value = 0;
 
+  loadPreferences();
+  state.boardMode = state.mode;
+  modeButtons = buildModeButtons("modeSeg", false);
+  boardTabButtons = buildModeButtons("boardTabs", true);
+  skinButtons = buildSkinButtons();
+
   state.username = getLastUsername();
-  const board = getLeaderboard();
+  const board = getLeaderboard(state.mode);
   state.best = board.length ? board[0].score : 0;
   resetGame();
   state.phase = "MENU";
@@ -1015,6 +1500,7 @@ function boot() {
 
   document.getElementById("btnStart").addEventListener("click", startGame);
   document.getElementById("btnBoard").addEventListener("click", function () {
+    state.boardMode = state.mode;
     renderBoard();
     state.panel = "leaderboard";
     syncUI();
