@@ -115,7 +115,7 @@ Dokumen ini adalah rencana kerja universal dan log perkembangan proyek pembuatan
 
 | Versi | Tanggal | Pelaksana | Ringkasan Perubahan | Referensi Commit |
 | :--- | :--- | :--- | :--- | :--- |
-| **v1.1.0** | 2026-11-07 | AI | Mode Time Attack & Hardcore, koin +5, power-up shield/slow-mo, 4 karakter, leaderboard per mode | — |
+| **v1.1.0** | 2026-11-07 | AI | Mode Time Attack & Hardcore, koin +5, power-up shield/slow-mo, 4 karakter, leaderboard per mode | `aea01a9` |
 | **v1.0.1** | 2026-10-31 | AI | Deploy publik ke GitHub Pages: <https://naraaisyhf.github.io/neon-flappy/> | `cafb670` |
 | **v1.0.0** | 2026-10-31 | AI | Rilis `index.html` NEON FLAPPY: 8 blok modular, leaderboard, fisika, audio, partikel, pause | — |
 | **v0.3.0** | 2026-10-31 | AI | Phase 0 selesai: konsep NEON FLAPPY (tap/klik, Neon Glow) beserta spesifikasi fisika, skor, dan kesulitan | — |
